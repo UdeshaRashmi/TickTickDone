@@ -10,7 +10,7 @@ const Footer = () => {
             <p className="flex items-center text-[#2D3436]/70">
               Made with <FaHeart className="text-red-400 mx-1" /> by TickTickDone
             </p>
-            <p className="text-sm text-[#2D3436]/70 mt-1">© 2024 All rights reserved</p>
+            <p className="text-sm text-[#2D3436]/70 mt-1">© 2026 All rights reserved</p>
           </div>
           
           <div className="flex space-x-6">
