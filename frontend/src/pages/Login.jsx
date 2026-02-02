@@ -2,6 +2,7 @@ import { useState } from 'react';
 import React from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaSignInAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
+import axios from 'axios';
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ const Login = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Handle input changes
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -20,38 +22,57 @@ const Login = ({ onLogin }) => {
     });
   };
 
+  // Handle login submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     // Basic validation
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
       setIsLoading(false);
       return;
     }
-    
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Demo login
-    if (formData.email === 'demo@example.com' && formData.password === 'password') {
-      onLogin();
+
+    try {
+      // Send login request to backend
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/login",
+        {
+          email: formData.email,
+          password: formData.password
+        },
+        {
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+
+      // Save token in localStorage for future requests
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      // Call onLogin callback (if any)
+      onLogin && onLogin();
+
+      // Navigate to /todo page
       navigate('/todo');
-    } else {
-      setError('Invalid credentials. Use demo@example.com / password for demo');
+
+    } catch (err) {
+      console.error(err.response?.data || err.message);
+      setError(err.response?.data?.message || 'Login failed');
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-[#A29BFE]/5 via-white to-[#81ECEC]/5">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md relative">
         {/* Decorative elements */}
         <div className="absolute top-20 left-10 w-32 h-32 bg-[#A29BFE]/10 rounded-full blur-xl"></div>
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-[#81ECEC]/10 rounded-full blur-xl"></div>
-        
+
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 relative z-10">
           {/* Header */}
           <div className="text-center mb-8">
@@ -75,8 +96,10 @@ const Login = ({ onLogin }) => {
             </div>
           )}
 
+          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
+
+            {/* Email */}
             <div>
               <label className="block text-[#2D3436] mb-2 font-medium text-sm uppercase tracking-wide">Email Address</label>
               <div className="relative group">
@@ -91,11 +114,10 @@ const Login = ({ onLogin }) => {
                   placeholder="you@example.com"
                   className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:border-[#A29BFE] focus:ring-2 focus:ring-[#A29BFE]/20 outline-none transition-all duration-300 text-[#2D3436] placeholder-gray-400"
                 />
-                <div className="absolute right-3 top-3 w-2 h-6 bg-gradient-to-b from-[#A29BFE] to-[#81ECEC] rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-[#2D3436] font-medium text-sm uppercase tracking-wide">Password</label>
@@ -126,22 +148,10 @@ const Login = ({ onLogin }) => {
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
-                <div className="absolute right-3 top-3 w-2 h-6 bg-gradient-to-b from-[#A29BFE] to-[#81ECEC] rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
               </div>
             </div>
 
-            {/* Remember me & Forgot password */}
-            <div className="flex justify-between items-center">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 text-[#A29BFE] rounded border-gray-300 focus:ring-[#A29BFE]/20" />
-                <span className="text-sm text-[#2D3436]/70">Remember me</span>
-              </label>
-              <Link to="/forgot-password" className="text-sm text-[#A29BFE] hover:text-[#8a83e5] transition">
-                Forgot password?
-              </Link>
-            </div>
-
-            {/* Submit Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={isLoading}
@@ -159,49 +169,21 @@ const Login = ({ onLogin }) => {
                 </>
               )}
             </button>
-
-            {/* Divider */}
-            <div className="relative py-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-[#2D3436]/50">Or continue with</span>
-              </div>
-            </div>
-
-            {/* Demo credentials */}
-            <div className="bg-gradient-to-r from-[#FDCB82]/10 to-[#FDCB82]/5 border border-[#FDCB82]/20 rounded-xl p-4 text-center">
-              <p className="text-sm font-medium text-[#2D3436] mb-1">Demo Access</p>
-              <p className="text-xs text-[#2D3436]/70">
-                Email: <span className="font-mono bg-[#FDCB82]/20 px-2 py-1 rounded">demo@example.com</span>
-              </p>
-              <p className="text-xs text-[#2D3436]/70 mt-1">
-                Password: <span className="font-mono bg-[#FDCB82]/20 px-2 py-1 rounded">password</span>
-              </p>
-            </div>
-
-            {/* Sign up link */}
-            <div className="text-center pt-4">
-              <p className="text-[#2D3436]/70">
-                Don't have an account?{' '}
-                <Link 
-                  to="/signup" 
-                  className="text-[#A29BFE] hover:text-[#8a83e5] font-semibold transition inline-flex items-center space-x-1 group"
-                >
-                  <span>Create account</span>
-                  <span className="group-hover:translate-x-1 transition-transform">→</span>
-                </Link>
-              </p>
-            </div>
           </form>
-        </div>
 
-        {/* Bottom decorative elements */}
-        <div className="flex justify-center space-x-4 mt-8">
-          <div className="w-3 h-3 bg-[#A29BFE] rounded-full animate-pulse"></div>
-          <div className="w-3 h-3 bg-[#FDCB82] rounded-full animate-pulse delay-100"></div>
-          <div className="w-3 h-3 bg-[#81ECEC] rounded-full animate-pulse delay-200"></div>
+          {/* Signup Link */}
+          <div className="text-center pt-4">
+            <p className="text-[#2D3436]/70">
+              Don't have an account?{' '}
+              <Link 
+                to="/signup" 
+                className="text-[#A29BFE] hover:text-[#8a83e5] font-semibold transition inline-flex items-center space-x-1 group"
+              >
+                <span>Create account</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
